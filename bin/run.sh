@@ -1,0 +1,1 @@
+/home/qhuang/works-2.0/sync/spark/spark-1.4.0/bin/spark-submit --class com.intel.logExcavator.Excavator --master spark://sr464:7077 target/scala-2.10/logexcavator_2.10-0.0.1.jar spark://sr464:7077 hdfs://sr464:9000/logExca/messages.100k 50 hdfs://sr464:9000/logExca/messages.1k
