@@ -27,7 +27,7 @@ object Preprocess {
     // In this case, consider using coalesce() to create fewer, larger partitions.
     val regex = "\\d+".r
     val regex2 = "(\\p{L}*)".r
-    val textRDD: RDD[String] = sc.textFile(paths.mkString(","), slices).filter(_.size > 2)
+    val textRDD: RDD[String] = sc.textFile(paths.mkString(","), slices).filter(_.size > 50)
 //    val textRDD = sc.textFile(paths.mkString(","), slices)
 //        .filter(_.size > 2)
 //      .map(_.split("\\s+")).map(p => p.slice(5, p.length))

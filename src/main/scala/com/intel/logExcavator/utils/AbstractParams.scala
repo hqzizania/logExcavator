@@ -66,5 +66,6 @@ case class Params(
                    algorithm: String = "onlineLDA",
                    checkpointDir: Option[String] = None,
                    jobname: String = "test",
-                   hdfs: String= "results/",
+                   hdfs: String = "results/",
+                   clusterMethod: String = "kMeans",
                    checkpointInterval: Int = 10) extends AbstractParams[Params]
