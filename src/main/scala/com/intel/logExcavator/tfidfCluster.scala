@@ -24,7 +24,7 @@ class tfidfCluster extends Serializable{
   def tfidfCluster(train: RDD[Seq[String]],
                     numClusters: Int, numIteration: Int,
                     test: RDD[Seq[String]], params:Params, sc:SparkContext): RDD[Int] = {
-    val hashingTF = new HashingTF()
+    val hashingTF = new HashingTF(10)
     val tf: RDD[Vector] = hashingTF.transform(train)
     val tf_test: RDD[Vector] = hashingTF.transform(test)
     val idf = new IDF().fit(tf)
@@ -38,20 +38,20 @@ class tfidfCluster extends Serializable{
         (k, (v, new Array[Double](num.toInt)))
     }
 
-    if(params.clusterMethod == "dbScan") {
+    if(params.clusterMethod == "dbScanDirect") {
       val broadcastNum = 100
       for (i <- 0 to num.toInt / broadcastNum) {
         val factor: Array[(Long, Vector)] = tfidf2.filter { case (k, v) => List.range(i * broadcastNum, (i + 1) * broadcastNum).contains(k)}.collect()
         val factorSC = sc.broadcast(factor)
-        tfidfA = tfidfA.mapPartitions(computeDistPartitions(_, factorSC))
+        tfidfA = tfidfA.mapPartitions(computeDistPartitions(_, factorSC.value))
       }
 
-      def computeDistPartitions(a: Iterator[(Long, (Vector, Array[Double]))], b: Broadcast[Array[(Long, Vector)]]) = {
+      def computeDistPartitions(a: Iterator[(Long, (Vector, Array[Double]))], b: Array[(Long, Vector)]) = {
 
         var c = List[(Long, (Vector, Array[Double]))]()
         while (a.hasNext) {
           var aa = a.next
-          for (i <- b.value) {
+          for (i <- b) {
               aa._2._2(i._1.toInt) = computeDist2bit(aa._2._1, i._2)
           }
           c ::= aa
@@ -101,11 +101,13 @@ class tfidfCluster extends Serializable{
         sum
       }
 
+
       val eps = 20
       val neighborTable: Array[Array[Boolean]] = tfidfA.map {
         case (k, (v, d)) => d.map(p => if (p < eps) true else false)
       }.collect()
 
+      println("beginning dbScan ... ")
       var cluster = new Array[Int](neighborTable.size)
       var active = new Array[Boolean](neighborTable.size)
       var clusterNow = 1

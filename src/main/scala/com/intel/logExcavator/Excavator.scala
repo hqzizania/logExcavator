@@ -133,6 +133,7 @@ object Excavator {
     val clusterMethod = params.clusterMethod match {
       case "kMeans" => println(s"k-Means algorithm will be used to clustering.")
       case "dbScan" => println(s"DBScan algorithm will be used to clustering.")
+      case "dbScanDirect" => println(s"DBScan algorithm will be used to clustering.")
       case _ => throw new IllegalArgumentException(
         s"Only kMeans and dbScan clustering algorithms are supported but got ${params.algorithm}.")
     }
