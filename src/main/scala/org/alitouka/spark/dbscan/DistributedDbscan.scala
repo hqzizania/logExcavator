@@ -5,7 +5,7 @@ import org.apache.commons.math3.ml.distance.DistanceMeasure
 import scala.collection.mutable.{ListBuffer, HashSet}
 import org.apache.spark.rdd.RDD
 import org.alitouka.spark.dbscan.spatial.rdd.{PointsInAdjacentBoxesRDD, PointsPartitionedByBoxesRDD, PartitioningSettings}
-import scala.Some
+import scala.{collection, Some}
 import org.alitouka.spark.dbscan.util.commandLine.CommonArgs
 import org.alitouka.spark.dbscan.util.debug.DebugHelper
 import org.apache.spark.Logging
@@ -39,6 +39,9 @@ class DistributedDbscan (
   override protected def run(data: RawDataSet): DbscanModel = {
     val distanceAnalyzer = new DistanceAnalyzer (settings)
     val partitionedData = PointsPartitionedByBoxesRDD (data, partitioningSettings, settings)
+    val a = partitionedData.partitions.size
+    val b = partitionedData.map(p => p._2.boxId).countByValue()
+    val c = partitionedData.boxes.map(p => (p.boxId, p.calculateBoxSize))
 
     DebugHelper.doAndSaveResult(data.sparkContext, "boxes") {
       path => {

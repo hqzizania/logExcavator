@@ -31,7 +31,7 @@ private [dbscan] class BoxCalculator (val data: RawDataSet) {
     }
 
     val totalCounts = partialCounts.foldByKey(0)(_+_).collectAsMap()
-    val boxesWithEnoughPoints = boxTree.flattenBoxes {
+    val boxesWithEnoughPoints: Iterable[Box] = boxTree.flattenBoxes {
       x => totalCounts (x.box.boxId) >= partitioningSettings.numberOfPointsInBox
     }
 

@@ -96,6 +96,11 @@ private [dbscan] class Box (val bounds: Array[BoundsInOneDimension], val boxId: 
     new Point (centerCoordinates)
   }
 
+  def calculateBoxSize: Double = {
+    val size = bounds.map(x => (x.upper - x.lower)).reduce(_+_)
+    size
+  }
+
   def addAdjacentBox (b: Box) = {
     adjacentBoxes = b :: adjacentBoxes
   }
