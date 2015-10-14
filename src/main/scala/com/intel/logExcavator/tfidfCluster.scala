@@ -162,8 +162,8 @@ class tfidfCluster extends Serializable{
       val tfidfPoints: RDD[Point] = tfidf.zipWithIndex().map{ case (point, id) => new Point(point.toArray).withOriginId(id) }
       val tfidf_testPoints: RDD[Point] = tfidf_test.map(p => new Point(p.toArray))
 
-      val clusteringSettings = new DbscanSettings().withNumberOfPoints(1).withEpsilon(0.01)//.withDistanceMeasureSuite(new CosineAngleDistanceSuite())
-      val partitioningSettings: PartitioningSettings = new PartitioningSettings().withNumberOfLevels(15).withNumberOfPointsInBox(100)
+      val clusteringSettings = new DbscanSettings().withNumberOfPoints(1).withEpsilon(0.1)//.withDistanceMeasureSuite(new CosineAngleDistanceSuite())
+      val partitioningSettings: PartitioningSettings = new PartitioningSettings().withNumberOfLevels(10).withNumberOfPointsInBox(100)
       val model: DbscanModel = Dbscan.train(tfidfPoints, clusteringSettings, partitioningSettings)
 
       model.allPoints.map(_.originId).zip(model.allPoints).sortByKey().map(_._2.clusterId.toInt)

@@ -56,7 +56,7 @@ private [dbscan] class PartitionIndex (val partitionBounds: Box,
 
   /** Finds point's neighbors
     *
-    * @param pt A point whose neighbors shuold be found
+    * @param pt A point whose neighbors should be found
     * @return A collection of pt's neighbors
     */
   def findClosePoints (pt: Point): Iterable[Point] = {

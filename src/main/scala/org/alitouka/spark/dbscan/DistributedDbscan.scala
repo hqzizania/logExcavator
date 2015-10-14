@@ -39,9 +39,9 @@ class DistributedDbscan (
   override protected def run(data: RawDataSet): DbscanModel = {
     val distanceAnalyzer = new DistanceAnalyzer (settings)
     val partitionedData = PointsPartitionedByBoxesRDD (data, partitioningSettings, settings)
-    val a = partitionedData.partitions.size
-    val b = partitionedData.map(p => p._2.boxId).countByValue()
-    val c = partitionedData.boxes.map(p => (p.boxId, p.calculateBoxSize))
+//    val a = partitionedData.partitions.size
+//    val b = partitionedData.map(p => p._2.boxId).countByValue()
+//    val c = partitionedData.boxes.map(p => (p.boxId, p.calculateBoxSize))
 
     DebugHelper.doAndSaveResult(data.sparkContext, "boxes") {
       path => {
@@ -54,8 +54,10 @@ class DistributedDbscan (
         data.sparkContext.parallelize(boxBoundaries).saveAsTextFile(path)
       }
     }
-
-    val pointsWithNeighborCounts = distanceAnalyzer.countNeighborsForEachPoint(partitionedData)
+    val pointsWithNeighborCounts = partitionedData.map{
+      case(pointSortKey, point) => (pointSortKey, new Point(point).withNumberOfNeighbors(1))
+    }
+//    val pointsWithNeighborCounts: RDD[(PointSortKey, Point)] = distanceAnalyzer.countNeighborsForEachPoint(partitionedData)
     val broadcastBoxes = data.sparkContext.broadcast(partitionedData.boxes)
 
     val partiallyClusteredData = pointsWithNeighborCounts.mapPartitionsWithIndex (

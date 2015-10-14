@@ -30,12 +30,12 @@ private [dbscan] class DistanceAnalyzer (
       .foldByKey(1)(_+_)
       .cache ()
 
-    val pointsWithoutNeighbors = data
+    val pointsWithoutNeighbors: RDD[(PointSortKey, Long)] = data
       .keys
       .subtract(closePointCounts.keys)
       .map ( x => (x, 1L))
 
-    val allPointCounts = closePointCounts.union (pointsWithoutNeighbors)
+    val allPointCounts: RDD[(PointSortKey, Long)] = closePointCounts.union (pointsWithoutNeighbors)
     val partitionedAndSortedCounts = new ShuffledRDD [PointSortKey, Long, Long] (
       allPointCounts,
       new BoxPartitioner (data.boxes)
@@ -43,7 +43,7 @@ private [dbscan] class DistanceAnalyzer (
 
     val sortedData = data.mapPartitions (sortPartition, true)
 
-    val pointsWithCounts = sortedData.zipPartitions(partitionedAndSortedCounts, true) {
+    val pointsWithCounts: RDD[(PointSortKey, Point)] = sortedData.zipPartitions(partitionedAndSortedCounts, true) {
       (it1, it2) => {
         it1.zip (it2).map {
           x => {
@@ -80,10 +80,10 @@ private [dbscan] class DistanceAnalyzer (
   def countClosePoints ( data: PointsPartitionedByBoxesRDD)
     :RDD[(PointSortKey, Long)] = {
 
-    val closePointsInsideBoxes = countClosePointsWithinEachBox(data)
-    val pointsCloseToBoxBounds = findPointsCloseToBoxBounds (data, data.boxes, settings.epsilon)
+    val closePointsInsideBoxes: RDD[(PointSortKey, Long)] = countClosePointsWithinEachBox(data)
+    val pointsCloseToBoxBounds: RDD[Point] = findPointsCloseToBoxBounds (data, data.boxes, settings.epsilon)
 
-    val closePointsInDifferentBoxes = countClosePointsInDifferentBoxes (pointsCloseToBoxBounds, data.boxes,
+    val closePointsInDifferentBoxes: RDD[(PointSortKey, Long)] = countClosePointsInDifferentBoxes (pointsCloseToBoxBounds, data.boxes,
       settings.epsilon)
 
     closePointsInsideBoxes.union (closePointsInDifferentBoxes)
@@ -107,15 +107,15 @@ private [dbscan] class DistanceAnalyzer (
 
   def countClosePointsWithinPartition (it: Iterator[(PointSortKey, Point)], boundingBox: Box): Iterator[(PointSortKey, Long)] = {
 
-    val (it1, it2) = it.duplicate
+//    val (it1, it2) = it.duplicate
     val partitionIndex = new PartitionIndex (boundingBox, settings, partitioningSettings)
     val counts = mutable.HashMap [PointSortKey, Long] ()
     //val boxIds = mutable.HashSet [BoxId] ()
 
-    partitionIndex.populate(it1.map ( _._2 ))
+//    partitionIndex.populate(it1.map ( _._2 ))
 
 
-    it2.foreach {
+    it.foreach {
       currentPoint => {
 
         val closePointsCount: Long = partitionIndex

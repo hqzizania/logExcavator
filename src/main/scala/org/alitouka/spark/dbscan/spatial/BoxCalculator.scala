@@ -25,7 +25,7 @@ private [dbscan] class BoxCalculator (val data: RawDataSet) {
 
     val partialCounts: RDD[(BoxId, Long)] = data.mapPartitions {
       it => {
-        val bt = broadcastBoxTree.value.clone ()
+        val bt = broadcastBoxTree.value//.clone ()
         BoxCalculator.countPointsInOnePartition(bt, it)
       }
     }
