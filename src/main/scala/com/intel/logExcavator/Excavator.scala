@@ -24,7 +24,9 @@ import org.apache.spark.mllib.clustering._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.mllib.linalg._
+import org.alitouka.spark.dbscan._
 
+import scala.collection.Map
 import scala.collection.immutable.Iterable
 
 
@@ -88,6 +90,10 @@ object Excavator {
         .text(s"inference algorithm to use. tfidf, emLDA and onlineLDA are supported." +
         s" default: ${defaultParams.algorithm}")
         .action((x, c) => c.copy(algorithm = x))
+      opt[String]("clusterMethod")
+        .text(s"inference clustering algorithm to use. kmeans and dbscan are supported." +
+        s" default: ${defaultParams.clusterMethod}")
+        .action((x, c) => c.copy(clusterMethod = x))
       opt[String]("checkpointDir")
         .text(s"Directory for checkpointing intermediate results." +
         s"  Checkpointing helps with recovery and eliminates temporary shuffle files on disk." +
@@ -124,6 +130,13 @@ object Excavator {
 
     val resultsDirect = params.hdfs + params.jobname
 
+    val clusterMethod = params.clusterMethod match {
+      case "kMeans" => println(s"k-Means algorithm will be used to clustering.")
+      case "dbScan" => println(s"DBScan algorithm will be used to clustering.")
+      case _ => throw new IllegalArgumentException(
+        s"Only kMeans and dbScan clustering algorithms are supported but got ${params.algorithm}.")
+    }
+
     val algorithm = params.algorithm match {
       case "tfidf" => runTFIDF(s"$resultsDirect/clusters-tfidf", params, sc)
       case "word2Vec" => runWord2Vec(s"$resultsDirect/clusters-word2Vec", params, sc)
@@ -133,22 +146,25 @@ object Excavator {
     }
     sc.stop()
 
+
+
   }
 
   private def runTFIDF(path: String, params: Params, sc: SparkContext) {
     val source = sc.textFile(params.input.mkString(","), params.slices).filter(_.size > 2).cache()
     val regex = "\\d+".r
     val train: RDD[Seq[String]] = source
-      .map(_.split("\\s+").toSeq).map(p => p.slice(5, p.length).filterNot(x => regex.pattern.matcher(x).matches).filter(_.size > 2))
+      .map(_.split("\\s+").toSeq).map(p => p.slice(4, p.length).filterNot(x => regex.pattern.matcher(x).matches).filter(_.size > 2))
     val test: RDD[Seq[String]] = train
     if (params.testfile.nonEmpty) {
       val test: RDD[Seq[String]] = sc.textFile(params.testfile, params.slices)
-        .map(_.split("\\s+").toSeq).map(p => p.slice(5, p.length).filterNot(x => regex.pattern.matcher(x).matches).filter(_.size > 2))
+        .map(_.split("\\s+").toSeq).map(p => p.slice(4, p.length).filterNot(x => regex.pattern.matcher(x).matches).filter(_.size > 2))
     }
 
-    val kCluster = new KmeansCluster()
-    val clusters: RDD[Int] = kCluster.kmeansCluster(train, params.k, 20, test)
-    val clustersPlusSource: RDD[(Int, String)]= clusters.zip(source).sortByKey().cache()
+    val kCluster = new tfidfCluster()
+    val clusters: RDD[Int] = kCluster.tfidfCluster(train, params.k, 20, test, params)
+
+    val clustersPlusSource: RDD[(Int, String)]= clusters.zipWithIndex().map(_.swap).join(source.zipWithIndex().map(_.swap)).map(_._2).sortByKey().cache()
 
     clustersPlusSource.saveAsTextFile(path)
   }
