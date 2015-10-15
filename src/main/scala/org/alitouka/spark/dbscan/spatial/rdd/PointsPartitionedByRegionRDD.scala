@@ -1,5 +1,6 @@
 package org.alitouka.spark.dbscan.spatial.rdd
 
+import org.alitouka.spark.dbscan.spatial.box.BoxCalculator
 import org.alitouka.spark.dbscan.spatial.{Region, RegionCalculator, PointSortKey, Point}
 import org.alitouka.spark.dbscan.{PointId, PointCoordinates, RawDataSet, DbscanSettings}
 import org.apache.spark.rdd.{RDD}
@@ -21,6 +22,7 @@ object PointsPartitionedByRegionRDD{
 
     val sc = rawData.sparkContext
     val boxCalculator: RegionCalculator = ClassTag(dbscanSettings.distanceMeasureSuite.regionCalculator).runtimeClass.getConstructors()(0).newInstance(rawData).asInstanceOf[RegionCalculator]
+//    val boxCalculator = new BoxCalculator(rawData).asInstanceOf[RegionCalculator]
     val (boxes, boundingBox) = boxCalculator.generateDensityBasedPartitions (partitioningSettings, dbscanSettings)
     val broadcastBoxes = sc.broadcast(boxes)
     var broadcastNumberOfDimensions = sc.broadcast (boxCalculator.numberOfDimensions)

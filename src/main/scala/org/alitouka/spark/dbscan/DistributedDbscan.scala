@@ -40,9 +40,9 @@ class DistributedDbscan (
   override protected def run(data: RawDataSet): DbscanModel = {
     val distanceAnalyzer = new DistanceAnalyzer (settings, partitioningSettings)
     val partitionedData: PointsPartitionedByRegionRDD = PointsPartitionedByRegionRDD (data, partitioningSettings, settings)
-    val a = partitionedData.partitions.size
-    val b = partitionedData.map(p => p._2.regionId).countByValue()
-    //    val c = partitionedData.boxes.map(p => (p.boxId, p.calculateBoxSize))
+//    val a = partitionedData.partitions.size
+//    val b = partitionedData.map(p => p._2.regionId).countByValue()
+//    val c = partitionedData.boxes.map(p => (p.regionId, p.calculateBoxSize))
 
     DebugHelper.doAndSaveResult(data.sparkContext, "boxes") {
       path => {

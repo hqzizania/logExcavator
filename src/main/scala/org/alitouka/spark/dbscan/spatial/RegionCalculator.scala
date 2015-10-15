@@ -21,7 +21,7 @@ abstract class RegionCalculator(val data:RawDataSet) {
 
 private [dbscan] object RegionCalculator{
   
-  def generateTreeOfRegions(root:Region,
+  def generateTreeOfRegions(root: Region,
                             partitioningSettings: PartitioningSettings,
                             dbscanSettings: DbscanSettings,
                             sampleData: Array[Point]):TreeItemWithNumberOfPoints = {
@@ -38,7 +38,7 @@ private [dbscan] object RegionCalculator{
     val result = new TreeItemWithNumberOfPoints(root)
 
     result.children = if (partitioningSettings.numberOfLevels > 0 && filterPointsEnough(sampleData, root)) {
-
+`
       val newPartitioningSettings = partitioningSettings.withNumberOfLevels(partitioningSettings.numberOfLevels-1)
 
       root

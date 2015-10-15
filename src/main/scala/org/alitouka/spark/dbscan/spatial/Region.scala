@@ -34,5 +34,7 @@ abstract class Region (val bounds: Array[BoundsInOneDimension],
   def isAdjacentToPartition (that: Region): Boolean
   
   def isPointCloseToAnyBounds(point:Point, threshold:Double) : Boolean
+
+  def calculateBoxSize: Double
   
 }

@@ -120,8 +120,11 @@ class HyperSector(bounds:Array[BoundsInOneDimension], id:RegionId = 0, partition
       
     
    }
-  
-  
+
+  def calculateBoxSize: Double = {
+    val size = bounds.map(x => (x.upper - x.lower)).reduce(_+_)
+    size
+  }
   
   
 }

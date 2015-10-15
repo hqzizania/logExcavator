@@ -80,7 +80,7 @@ private [dbscan] class DistanceAnalyzer (
     :RDD[(PointSortKey, Long)] = {
 
     val closePointsInsideBoxes = countClosePointsWithinEachBox(data)
-    val pointsCloseToBoxBounds = findPointsCloseToBoxBounds (data, data.boxes, settings.epsilon)
+    val pointsCloseToBoxBounds: RDD[Point] = findPointsCloseToBoxBounds (data, data.boxes, settings.epsilon)
 
     val closePointsInDifferentBoxes = countClosePointsInDifferentBoxes (pointsCloseToBoxBounds, data.boxes,
       settings.epsilon)
@@ -98,8 +98,12 @@ private [dbscan] class DistanceAnalyzer (
 
         val boxes = broadcastBoxes.value
         val boundingBox = boxes.find ( _.partitionId == partitionIndex ).get
-
-        countClosePointsWithinPartition (it, boundingBox)
+        if (boundingBox.calculateBoxSize < settings.epsilon) {
+          val numberOfPointsInPartition = it.size.toLong
+          it.map(_._1).zipWithIndex.map(x => (x._1, numberOfPointsInPartition))
+        }
+        else
+          countClosePointsWithinPartition (it, boundingBox)
       }
     }
   }

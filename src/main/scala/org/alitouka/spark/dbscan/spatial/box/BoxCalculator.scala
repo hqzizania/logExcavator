@@ -24,7 +24,7 @@ private [dbscan] class BoxCalculator (data: RawDataSet) extends RegionCalculator
     val datasetBounds: List[BoundsInOneDimension] = calculateBounds(data, numberOfDimensions)
     val rootBox = new Box (datasetBounds.toArray)
     val sampleData: Array[Point] = data.takeSample(true, 100, new java.text.SimpleDateFormat("ss").format(new java.util.Date()).toLong)
-    val boxTree = RegionCalculator.generateTreeOfRegions(rootBox, partitioningSettings, dbscanSettings, sampleData)
+    val boxTree = RegionCalculator.generateTreeOfRegions(rootBox.asInstanceOf[Region], partitioningSettings, dbscanSettings, sampleData)
 
     val broadcastBoxTree = data.sparkContext.broadcast(boxTree)
 
@@ -42,7 +42,7 @@ private [dbscan] class BoxCalculator (data: RawDataSet) extends RegionCalculator
 
     RegionCalculator.assignAdjacentRegions (boxesWithEnoughPoints)
 
-    (GenericPartitioner.assignPartitionIdsToBoxes(boxesWithEnoughPoints), rootBox)
+    (GenericPartitioner.assignPartitionIdsToBoxes(boxesWithEnoughPoints), rootBox.asInstanceOf[Box])
   }
 
 

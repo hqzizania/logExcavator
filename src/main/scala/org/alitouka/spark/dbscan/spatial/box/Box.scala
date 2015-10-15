@@ -140,7 +140,11 @@ private [dbscan] class Box (bounds: Array[BoundsInOneDimension], boxId: RegionId
     val x = pt.coordinates(dimension)
     Math.abs(x - bound.lower) <= threshold || Math.abs(x - bound.upper) <= threshold
   }
-  
+
+  def calculateBoxSize: Double = {
+    val size = bounds.map(x => (x.upper - x.lower)).reduce(_+_)
+    size
+  }
   
 }
 
