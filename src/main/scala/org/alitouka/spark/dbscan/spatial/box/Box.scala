@@ -50,7 +50,7 @@ private [dbscan] class Box (bounds: Array[BoundsInOneDimension], boxId: RegionId
 
   def isBigEnough (settings: DbscanSettings): Boolean = {
 
-    bounds.forall( _.length >= 2*settings.epsilon/100 )
+    bounds.forall( _.length >= 2*settings.epsilon/10 )
   }
 
   def extendBySizeOfOtherPartition (b: Region): Region = {

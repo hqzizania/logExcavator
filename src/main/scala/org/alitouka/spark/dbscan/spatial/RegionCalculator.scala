@@ -38,12 +38,12 @@ private [dbscan] object RegionCalculator{
     val result = new TreeItemWithNumberOfPoints(root)
 
     result.children = if (partitioningSettings.numberOfLevels > 0 && filterPointsEnough(sampleData, root)) {
-`
+
       val newPartitioningSettings = partitioningSettings.withNumberOfLevels(partitioningSettings.numberOfLevels-1)
 
       root
         .splitAlongLongestDimension(partitioningSettings.numberOfSplits, idGenerator)
-        .filter(_.isBigEnough(dbscanSettings))
+//        .filter(_.isBigEnough(dbscanSettings))
         .map(x => generateTreeOfRegions(x,
           newPartitioningSettings,
           dbscanSettings,
@@ -130,7 +130,7 @@ private [dbscan] object RegionCalculator{
 
       rootBox
         .splitAlongLongestDimension(splitsInLevel)
-        .filter(_.isBigEnough(dbscanSettings))
+//        .filter(_.isBigEnough(dbscanSettings))
         .map(x => computeTreeLeafs(x.asInstanceOf[SHAPE],
           levels-1,
           splitsInLevel,

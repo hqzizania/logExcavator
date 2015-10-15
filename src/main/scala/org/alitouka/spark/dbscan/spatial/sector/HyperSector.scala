@@ -23,7 +23,7 @@ class HyperSector(bounds:Array[BoundsInOneDimension], id:RegionId = 0, partition
    *
    */
   override def isBigEnough(settings: DbscanSettings): Boolean = {
-    bounds.forall( _.length >= 2*settings.epsilon )
+    bounds.forall( _.length >= 2*settings.epsilon/10 )
   }
 
   override def withId(newId: RegionId): Region = {

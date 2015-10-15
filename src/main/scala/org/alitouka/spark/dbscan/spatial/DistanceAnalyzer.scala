@@ -1,5 +1,6 @@
 package org.alitouka.spark.dbscan.spatial
 
+import org.alitouka.spark.dbscan.spatial.box.Box
 import org.apache.spark.rdd.{ShuffledRDD, RDD}
 import org.apache.spark.SparkContext._
 import org.alitouka.spark.dbscan.spatial.rdd._
@@ -79,7 +80,7 @@ private [dbscan] class DistanceAnalyzer (
   def countClosePoints ( data: PointsPartitionedByRegionRDD)
     :RDD[(PointSortKey, Long)] = {
 
-    val closePointsInsideBoxes = countClosePointsWithinEachBox(data)
+    val closePointsInsideBoxes: RDD[(PointSortKey, Long)] = countClosePointsWithinEachBox(data)
     val pointsCloseToBoxBounds: RDD[Point] = findPointsCloseToBoxBounds (data, data.boxes, settings.epsilon)
 
     val closePointsInDifferentBoxes = countClosePointsInDifferentBoxes (pointsCloseToBoxBounds, data.boxes,
@@ -96,7 +97,7 @@ private [dbscan] class DistanceAnalyzer (
     data.mapPartitionsWithIndex {
       (partitionIndex, it) => {
 
-        val boxes = broadcastBoxes.value
+        val boxes: Iterable[Region] = broadcastBoxes.value
         val boundingBox = boxes.find ( _.partitionId == partitionIndex ).get
         if (boundingBox.calculateBoxSize < settings.epsilon) {
           val numberOfPointsInPartition = it.size.toLong
@@ -143,19 +144,29 @@ private [dbscan] class DistanceAnalyzer (
 
       val box = broadcastBoxes.value.find ( _.partitionId == index ).get
 
-      it.filter ( x => isPointCloseToAnyBound (x._2, box, eps)).map ( _._2 )
+      it.filter ( x => isPointCloseToAnyBound (x._2, box, eps)).map (_._2)
     })
+  }
+
+  def checkCloseEnough(adjacentRegions: PairOfAdjacentRegionIds, boxes: Iterable[Region]) = {
+    val box1 = boxes.find(_.regionId == adjacentRegions._1).get
+    val box2 = boxes.find(_.regionId == adjacentRegions._2).get
+    val boxMerged = new Box(box1.bounds.zip(box2.bounds).map{
+      case(bounds1, bounds2) => new BoundsInOneDimension(
+        math.min(bounds1.lower, bounds2.lower), math.max(bounds1.upper, bounds2.upper))
+    })
+    boxMerged.calculateBoxSize > settings.epsilon
   }
 
   def countClosePointsInDifferentBoxes (data: RDD[Point], boxesWithAdjacentBoxes: Iterable[Region], eps: Double): RDD[(PointSortKey, Long)] = {
 
     val pointsInAdjacentBoxes: RDD[(PairOfAdjacentRegionIds, Point)] = PointsInAdjacentRegionsRDD (data, boxesWithAdjacentBoxes)
+    val broadcastBoxes = data.sparkContext.broadcast(boxesWithAdjacentBoxes)
 
-
-    pointsInAdjacentBoxes.mapPartitionsWithIndex {
+    pointsInAdjacentBoxes.filter(x => checkCloseEnough(x._1, broadcastBoxes.value)).mapPartitionsWithIndex {
+//    pointsInAdjacentBoxes.mapPartitionsWithIndex {
       (idx, it) => {
-
-        val pointsInPartition = it.map (_._2).toArray.sortBy(_.distanceFromOrigin)
+        val pointsInPartition: Array[Point] = it.map (_._2).toArray.sortBy(_.distanceFromOrigin)
         val counts = mutable.HashMap [PointSortKey, Long] ()
 
         for (i <- 1 until pointsInPartition.length) {

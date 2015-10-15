@@ -2,7 +2,7 @@ package org.alitouka.spark.dbscan.spatial.rdd
 
 import org.apache.spark.rdd.{RDD, ShuffledRDD}
 import org.alitouka.spark.dbscan.spatial.{PointSortKey, Point}
-import org.alitouka.spark.dbscan.PairOfAdjacentRegionIds
+import org.alitouka.spark.dbscan.{RegionId, PairOfAdjacentRegionIds}
 import org.alitouka.spark.dbscan.spatial.RegionCalculator
 import org.alitouka.spark.dbscan.spatial.Region
 
@@ -26,7 +26,7 @@ private [dbscan] class PointsInAdjacentRegionsRDD (prev: RDD[(PairOfAdjacentRegi
 private [dbscan] object PointsInAdjacentRegionsRDD {
 
   def apply (points: RDD[Point], boxesWithAdjacentBoxes: Iterable[Region]): PointsInAdjacentRegionsRDD = {
-    val adjacentBoxIdPairs = RegionCalculator.generateDistinctPairsOfAdjacentRegionIds(boxesWithAdjacentBoxes).toArray
+    val adjacentBoxIdPairs: Array[(RegionId, RegionId)] = RegionCalculator.generateDistinctPairsOfAdjacentRegionIds(boxesWithAdjacentBoxes).toArray
 
     val broadcastBoxIdPairs = points.sparkContext.broadcast(adjacentBoxIdPairs)
 
