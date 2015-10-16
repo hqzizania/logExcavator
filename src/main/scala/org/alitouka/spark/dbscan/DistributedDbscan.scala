@@ -115,8 +115,6 @@ class DistributedDbscan (
   private [dbscan] def findClustersInOnePartition (it: Iterator[(PointSortKey, Point)],
     boundingBox: Region): Iterator[(PointSortKey, Point)] = {
 
-
-    val enoughClose = boundingBox.calculateBoxSize < settings.epsilon
     var tempPointId = 0
     val points = it.map {
       x => {
@@ -127,21 +125,23 @@ class DistributedDbscan (
       }
     }.toMap
 
-    val partitionIndex = settings.distanceMeasureSuite.regionPartitioner.getConstructors()(0).
-                newInstance (boundingBox, settings, partitioningSettings).asInstanceOf[RegionPartitionIndex]
-
-    partitionIndex.populate(points.values)
-
     var startingPointWithId = findUnvisitedCorePoint(points, settings)
 
     if (boundingBox.calculateBoxSize < settings.epsilon)
       points.foreach(_._2.transientClusterId = startingPointWithId.get._2.pointId)
 
-    else
+    else {
+      val partitionIndex = settings.distanceMeasureSuite.regionPartitioner.getConstructors()(0).
+        newInstance (boundingBox, settings, partitioningSettings).asInstanceOf[RegionPartitionIndex]
+
+      partitionIndex.populate(points.values)
+
       while (startingPointWithId.isDefined) {
         expandCluster(points, partitionIndex, startingPointWithId.get._2, settings)
         startingPointWithId = findUnvisitedCorePoint(points, settings)
       }
+    }
+
 
     points.map ( pt => (new PointSortKey(pt._2), pt._2.toImmutablePoint)).iterator
   }
